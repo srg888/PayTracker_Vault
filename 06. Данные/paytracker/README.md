@@ -1,0 +1,35 @@
+# PayTracker — модели и миграция БД
+
+## Состав
+- `app/db/base_class.py` — declarative Base с naming convention (важно для стабильного autogenerate).
+- `app/models/` — все модели SQLAlchemy 2.0 (Mapped/mapped_column), 17 таблиц.
+- `alembic/` — конфигурация Alembic, `alembic/versions/..._initial_schema.py` — первая миграция.
+
+Модель полностью соответствует ER-диаграмме и .md файлам из Obsidian vault
+(комментарии в коде моделей ссылаются на конкретные заметки).
+
+## Как использовать в существующем проекте
+
+1. Скопировать `app/db/base_class.py`, `app/models/*` в свой проект (или смёрджить с существующими,
+   если у тебя уже есть `app/db/base_class.py` — тогда просто добавь модели).
+2. Скопировать `alembic/` и `alembic.ini`, если Alembic ещё не настроен, либо перенести только
+   файл миграции `alembic/versions/7fe16b3def34_initial_schema.py` в свой существующий alembic/versions/,
+   поправив `down_revision`, если у тебя уже есть предыдущие миграции.
+3. Задать переменную окружения `DATABASE_URL`, например:
+   `postgresql+psycopg2://user:password@db:5432/paytracker`
+4. Накатить миграцию: `alembic upgrade head`
+
+## Что уже проверено (не просто сгенерировано, а реально прогнано на PostgreSQL 16)
+- `alembic upgrade head` — создаёт все 17 таблиц, 6 ENUM-типов (без дублей — payment_method
+  переиспользуется между payment_requests и purchase_requests), все FK и constraints с
+  предсказуемыми именами.
+- `alembic downgrade base` — полностью откатывает схему, включая ENUM-типы.
+- Повторный `alembic upgrade head` после downgrade — проходит чисто (эта проверка вскрыла
+  и исправила баг: Alembic по умолчанию не удаляет ENUM-типы при drop_table в PostgreSQL,
+  это дописано вручную в конце downgrade()).
+- Сквозная вставка/чтение данных через ORM (заявка → платёжные детали → комментарии →
+  документы → аудит-лог) — работает через реальные модели, не только "голый" DDL.
+
+## Дальнейшие миграции
+Дальше новые миграции пишутся через `alembic revision --autogenerate -m "..."` после
+изменения моделей — так же, как была сгенерирована эта, первая.

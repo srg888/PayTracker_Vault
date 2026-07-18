@@ -1,0 +1,93 @@
+﻿[2026-07-18T10:49:49.956Z] [Plugin] Starting plugin initialization
+[2026-07-18T10:49:49.961Z] .. 📦 [Cache] Loaded SHA caches from storage: {
+  "source": "plugin data.json",
+  "localShaCount": 0,
+  "remoteShaCount": 0,
+  "lastCommit": null
+}
+[2026-07-18T10:49:49.963Z] [Plugin] Plugin initialization completed successfully
+[2026-07-18T10:52:36.418Z] [FitSettings] Failed to update cache: {
+  "name": "VaultError",
+  "message": "Failed to fetch",
+  "type": "network",
+  "details": {
+    "originalError": {
+      "name": "HttpError",
+      "message": "Failed to fetch",
+      "status": 500,
+      "request": {
+        "method": "GET",
+        "url": "https://api.github.com/repos/srg888//commits",
+        "headers": {
+          "accept": "application/vnd.github.v3+json",
+          "user-agent": "octokit-core.js/7.0.6 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.12.7 Chrome/142.0.7444.265 Electron/39.8.3 Safari/537.36",
+          "if-none-match": "",
+          "x-github-api-version": "2022-11-28",
+          "authorization": "token [REDACTED]"
+        },
+        "request": {
+          "retryCount": 3,
+          "retries": 3,
+          "retryAfter": 16
+        }
+      }
+    }
+  }
+}
+[2026-07-18T10:55:22.917Z] [Plugin] Starting plugin initialization
+[2026-07-18T10:55:22.922Z] .. 📦 [Cache] Loaded SHA caches from storage: {
+  "source": "plugin data.json",
+  "localShaCount": 0,
+  "remoteShaCount": 0,
+  "lastCommit": null
+}
+[2026-07-18T10:55:22.924Z] [Plugin] Plugin initialization completed successfully
+[2026-07-18T10:56:33.904Z] [FitSettings] Failed to update cache: {
+  "name": "HttpError",
+  "message": "Git Repository is empty. - https://docs.github.com/rest/commits/commits#list-commits",
+  "status": 409,
+  "request": {
+    "method": "GET",
+    "url": "https://api.github.com/repos/srg888/PayTracker_Vault/commits",
+    "headers": {
+      "accept": "application/vnd.github.v3+json",
+      "user-agent": "octokit-core.js/7.0.6 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) obsidian/1.12.7 Chrome/142.0.7444.265 Electron/39.8.3 Safari/537.36",
+      "if-none-match": "",
+      "x-github-api-version": "2022-11-28",
+      "authorization": "token [REDACTED]"
+    },
+    "request": {
+      "retryCount": 3,
+      "retries": 3,
+      "retryAfter": 16
+    }
+  },
+  "response": {
+    "url": "https://api.github.com/repos/srg888/PayTracker_Vault/commits",
+    "status": 409,
+    "headers": {
+      "content-length": "147",
+      "content-type": "application/json; charset=utf-8",
+      "x-github-media-type": "github.v3; format=json",
+      "x-github-request-id": "849E:3C45D9:1F59C44:1CE55E1:6A5B5BE1",
+      "x-ratelimit-limit": "5000",
+      "x-ratelimit-remaining": "4991",
+      "x-ratelimit-reset": "1784375517",
+      "x-ratelimit-resource": "core",
+      "x-ratelimit-used": "9"
+    },
+    "data": {
+      "message": "Git Repository is empty.",
+      "documentation_url": "https://docs.github.com/rest/commits/commits#list-commits",
+      "status": "409"
+    }
+  }
+}
+[2026-07-18T10:58:30.270Z] [Plugin] Starting plugin initialization
+[2026-07-18T10:58:30.275Z] .. 📦 [Cache] Loaded SHA caches from storage: {
+  "source": "plugin data.json",
+  "localShaCount": 0,
+  "remoteShaCount": 0,
+  "lastCommit": null
+}
+[2026-07-18T10:58:30.277Z] [Plugin] Plugin initialization completed successfully
