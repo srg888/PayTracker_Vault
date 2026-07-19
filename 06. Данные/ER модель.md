@@ -1,6 +1,4 @@
-ER-модель для системы трекинга платежей (17 таблиц). Разбита на две части: ядро процесса (заявки) и справочники/аудит. Диаграммы в формате mermaid — Obsidian отрисовывает их нативно (плагин mermaid встроен).
-
-Поля `created_at` / `updated_at` (из `TimestampMixin`) есть у таблиц `REQUESTS`, `USERS`, `AGENTS`, `EXCHANGE_RATES`; на остальных таблицах они отсутствуют — точки во времени фиксируются через специализированные поля (например, `changed_at`, `uploaded_at`).
+ER-модель для системы трекинга платежей. Разбита на две части: ядро процесса (заявки) и справочники/аудит. Диаграммы в формате mermaid — Obsidian отрисовывает их нативно (плагин mermaid встроен).
 
 ## Часть 1: ядро процесса
 
@@ -18,7 +16,6 @@ erDiagram
   REQUESTS ||--o| CONSULTATION_REQUESTS : extends
   REQUESTS ||--o{ STATUS_HISTORY : has
   REQUESTS ||--o{ COMMENTS : has
-  COMMENTS ||--o{ DOCUMENTS : has
   REQUESTS ||--o{ DOCUMENTS : has
   REQUESTS ||--o{ REQUEST_DOC_REQUIREMENTS : has
   DOCUMENT_TYPES ||--o{ DOCUMENTS : classifies
@@ -27,96 +24,62 @@ erDiagram
   USERS {
     int id PK
     string full_name
-    string email UK
-    string telegram_id UK
     string role
-    bool is_active
-    datetime created_at
-    datetime updated_at
   }
   DIVISIONS {
     int id PK
-    string name UK
+    string name
   }
   REQUESTS {
     int id PK
-    string number UK
     string type
     string status
     string title
-    text description
     date expected_date
+    int created_by FK
     int division_id FK
-    int created_by_id FK
     int executor_id FK
-    datetime submitted_at
-    datetime closed_at
-    datetime created_at
-    datetime updated_at
   }
   PAYMENT_REQUESTS {
     int request_id PK
-    text purpose
-    text payment_purpose
     decimal amount
     int currency_id FK
-    string recipient_name
-    string recipient_country
-    string recipient_address
-    string recipient_bank
-    string account_number_iban
-    string swift_bic
-    text additional_payment_info
-    string payment_method
     int agent_id FK
-    decimal rate_at_request
-    decimal amount_rub_at_request
-    decimal rate_at_execution
-    decimal amount_rub_at_execution
+    string payment_method
   }
   PURCHASE_REQUESTS {
     int request_id PK
     int buyer_company_id FK
     string payment_method
-    text markup_notes
     date delivery_date
   }
   CONSULTATION_REQUESTS {
     int request_id PK
-    text question_description
+    string question_text
   }
   STATUS_HISTORY {
     int id PK
     int request_id FK
     string from_status
     string to_status
-    int changed_by_id FK
-    text comment
-    datetime changed_at
+    int changed_by FK
   }
   COMMENTS {
     int id PK
     int request_id FK
     int author_id FK
-    text content
-    datetime created_at
+    string content
   }
   DOCUMENT_TYPES {
     string code PK
     string name
     string category
-    bool is_required_default
   }
   DOCUMENTS {
     int id PK
     int request_id FK
-    int comment_id FK
     string document_type_code FK
     string file_name
-    string storage_path
-    bigint file_size_bytes
-    int uploaded_by_id FK
-    datetime uploaded_at
   }
   REQUEST_DOC_REQUIREMENTS {
     int id PK
@@ -141,30 +104,23 @@ erDiagram
 
   AGENTS {
     int id PK
-    string code UK
+    string code
     string name
-    bool is_resident
-    bool is_active
-    datetime created_at
-    datetime updated_at
   }
   BUYER_COMPANIES {
     int id PK
-    string name UK
-    bool is_active
+    string name
   }
   CURRENCIES {
     int id PK
-    string code UK
+    string code
   }
   EXCHANGE_RATES {
     int id PK
     int currency_id FK
-    date rate_date UK
+    date rate_date
     decimal rate_value
     bool is_stale
-    datetime created_at
-    datetime updated_at
   }
   DELEGATIONS {
     int id PK
@@ -172,17 +128,13 @@ erDiagram
     int delegate_id FK
     date start_date
     date end_date
-    datetime revoked_at
   }
   AUDIT_LOG {
     int id PK
     string entity_type
-    int entity_id
+    int entity_id FK
     int user_id FK
     string action_type
-    string field_name
-    text old_value
-    text new_value
     datetime created_at
   }
   USERS {
@@ -206,7 +158,7 @@ erDiagram
 - **`REQUEST_DOC_REQUIREMENTS`** — таблица-исключение. По умолчанию обязательность документа берётся из `DOCUMENT_TYPES.is_required_default`, но Руководитель может переопределить перечень обязательных документов для конкретной заявки, не трогая общий справочник (см. [[09. Проверка комплектности и закрытие заявки|Проверка комплектности и закрытие заявки]] и [[Бизнес-правила|BR-052]]).
 - **`AUDIT_LOG`** — универсальная таблица (`entity_type` + `entity_id`), а не отдельная таблица под каждый тип события. Проще в поддержке при 50-100 пользователях, чем плодить audit_requests, audit_documents и т.п. Соответствует требованиям из [[Аудит]].
 - Один и тот же `USERS.id` встречается и как заказчик, и как исполнитель, и как участник делегирования — роль не жёстко зашита в отдельные таблицы, а определяется полем `role` и тем, в какой роли пользователь упомянут в конкретной заявке (см. [[Роли и права]]).
-- `PAYMENT_REQUESTS` хранит `rate_at_request` / `rate_at_execution` — см. edge cases по курсу ЦБ в [[01. Поля заявки — Платёж|Поля заявки — Платёж]] и [[08. Фактическое исполнение платежа|Фактическое исполнение платежа]].
+- `PAYMENT_REQUESTS` хранит `rate_at_request` / `rate_at_execution` (не показаны на диаграмме для краткости) — см. edge cases по курсу ЦБ в [[01. Поля заявки — Платёж|Поля заявки — Платёж]] и [[08. Фактическое исполнение платежа|Фактическое исполнение платежа]].
 
 ## Реализация
 Модель уже реализована как SQLAlchemy 2.0 модели (17 таблиц) и первая Alembic-миграция под стек FastAPI/PostgreSQL — см. `paytracker/README.md` в этой же папке (`06. Данные/paytracker/`). Комментарии в коде моделей ссылаются на конкретные заметки этого vault. Проверено на PostgreSQL 16: `alembic upgrade head` / `alembic downgrade base` / повторный upgrade, сквозная запись/чтение через ORM. Соотносится с [[Архитектурные решения]] и [[Нефункциональные требования]].
