@@ -18,6 +18,7 @@ erDiagram
   REQUESTS ||--o| CONSULTATION_REQUESTS : extends
   REQUESTS ||--o{ STATUS_HISTORY : has
   REQUESTS ||--o{ COMMENTS : has
+  COMMENTS ||--o{ DOCUMENTS : has
   REQUESTS ||--o{ DOCUMENTS : has
   REQUESTS ||--o{ REQUEST_DOC_REQUIREMENTS : has
   DOCUMENT_TYPES ||--o{ DOCUMENTS : classifies
@@ -109,6 +110,7 @@ erDiagram
   DOCUMENTS {
     int id PK
     int request_id FK
+    int comment_id FK
     string document_type_code FK
     string file_name
     string storage_path
