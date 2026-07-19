@@ -2,7 +2,7 @@ from app.db.base_class import Base
 from app.models.agent import Agent
 from app.models.audit_log import AuditLog
 from app.models.buyer_company import BuyerCompany
-from app.models.comment import RequestComment
+from app.models.comment import RequestComment, RequestCommentAttachment
 from app.models.currency import Currency, ExchangeRate
 from app.models.delegation import Delegation
 from app.models.division import Division
@@ -18,6 +18,7 @@ __all__ = [
     "AuditLog",
     "BuyerCompany",
     "RequestComment",
+    "RequestCommentAttachment",
     "Currency",
     "ExchangeRate",
     "Delegation",

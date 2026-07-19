@@ -43,7 +43,10 @@ class AuditActionType(str, enum.Enum):
     FIELD_CHANGE = "field_change"
     FILE_UPLOAD = "file_upload"
     FILE_DELETE = "file_delete"
+    CREATED_FOR_REQUESTER = "created_for_requester"  # заявка создана от имени Заказчика (BR-015)
     EXECUTOR_ASSIGNED = "executor_assigned"
+    EXECUTOR_SELF_ASSIGNED = "executor_self_assigned"  # сотрудник взял заявку в работу сам (BR-023)
+    COMMENT_ATTACHMENT_UPLOADED = "comment_attachment_uploaded"
     REJECTED = "rejected"
     ACKNOWLEDGED_REJECTION = "acknowledged_rejection"
     CONFIRMED_EXECUTION = "confirmed_execution"

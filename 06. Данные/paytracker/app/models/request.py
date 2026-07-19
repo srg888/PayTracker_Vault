@@ -38,6 +38,11 @@ class Request(Base, TimestampMixin):
 
     division_id: Mapped[int] = mapped_column(ForeignKey("divisions.id"), nullable=False)
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    # Кто является Заказчиком по заявке. По умолчанию совпадает с created_by_id.
+    # Отличается от created_by_id, если заявку от имени Заказчика создал Руководитель
+    # или Исполнитель отдела (см. "00. Создание заявки — от имени Заказчика.md", BR-015).
+    # Заполняется при создании заявки: requester_id = created_by_id, если явно не указан другой заказчик.
+    requester_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     executor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -45,6 +50,7 @@ class Request(Base, TimestampMixin):
 
     division: Mapped["Division"] = relationship()
     created_by: Mapped["User"] = relationship(foreign_keys=[created_by_id], back_populates="created_requests")
+    requester: Mapped["User"] = relationship(foreign_keys=[requester_id], back_populates="requested_requests")
     executor: Mapped["User | None"] = relationship(foreign_keys=[executor_id], back_populates="executed_requests")
 
     payment_details: Mapped["PaymentRequest | None"] = relationship(

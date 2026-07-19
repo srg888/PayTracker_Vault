@@ -21,6 +21,11 @@ class User(Base, TimestampMixin):
     created_requests: Mapped[list["Request"]] = relationship(
         "Request", foreign_keys="Request.created_by_id", back_populates="created_by"
     )
+    # Заявки, где пользователь указан как Заказчик (requester_id) — не всегда совпадают
+    # с created_requests, см. "Создание заявки от имени Заказчика".
+    requested_requests: Mapped[list["Request"]] = relationship(
+        "Request", foreign_keys="Request.requester_id", back_populates="requester"
+    )
     executed_requests: Mapped[list["Request"]] = relationship(
         "Request", foreign_keys="Request.executor_id", back_populates="executor"
     )
