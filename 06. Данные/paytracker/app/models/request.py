@@ -101,8 +101,16 @@ class PaymentRequest(Base):
     swift_bic: Mapped[str] = mapped_column(String(16), nullable=False)
     additional_payment_info: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    payment_method: Mapped[PaymentMethod] = mapped_column(PAYMENT_METHOD_ENUM, nullable=False)
+    # payment_method и agent_id заполняются НЕ Заказчиком при создании заявки, а по факту
+    # согласования условий исполнения — см. "00a. Согласование условий исполнения (Платёж).md".
+    # До принятия условий (BR-100..102) остаются NULL.
+    payment_method: Mapped[PaymentMethod | None] = mapped_column(PAYMENT_METHOD_ENUM, nullable=True)
     agent_id: Mapped[int | None] = mapped_column(ForeignKey("agents.id"), nullable=True)
+
+    # Последнее ПРИНЯТОЕ Заказчиком предложение условий (см. PaymentTermsProposal ниже) —
+    # дублируется сюда для быстрого доступа при исполнении и в чек-листе комплектности.
+    agreed_commission_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2), nullable=True)
+    agreed_rate: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
 
     # Курс ЦБ: на дату заявки (инфо) и на дату фактического исполнения (используется в отчётах)
     rate_at_request: Mapped[Decimal | None] = mapped_column(Numeric(18, 6), nullable=True)
@@ -113,6 +121,11 @@ class PaymentRequest(Base):
     request: Mapped["Request"] = relationship(back_populates="payment_details")
     currency: Mapped["Currency"] = relationship()
     agent: Mapped["Agent | None"] = relationship()
+    terms_proposals: Mapped[list["PaymentTermsProposal"]] = relationship(
+        back_populates="payment_request",
+        cascade="all, delete-orphan",
+        order_by="PaymentTermsProposal.proposed_at",
+    )
 
 
 class PurchaseRequest(Base):

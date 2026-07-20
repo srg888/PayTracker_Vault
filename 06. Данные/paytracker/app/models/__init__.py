@@ -8,6 +8,7 @@ from app.models.delegation import Delegation
 from app.models.division import Division
 from app.models.document import RequestDocument, RequestDocumentRequirement
 from app.models.document_type import DocumentType
+from app.models.payment_terms_proposal import PaymentTermsProposal
 from app.models.request import ConsultationRequest, PaymentRequest, PurchaseRequest, Request
 from app.models.status_history import RequestStatusHistory
 from app.models.user import User
@@ -30,6 +31,7 @@ __all__ = [
     "PaymentRequest",
     "PurchaseRequest",
     "ConsultationRequest",
+    "PaymentTermsProposal",
     "RequestStatusHistory",
     "User",
 ]

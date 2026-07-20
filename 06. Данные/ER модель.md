@@ -20,6 +20,7 @@ erDiagram
   REQUESTS ||--o{ DOCUMENTS : has
   REQUESTS ||--o{ REQUEST_DOC_REQUIREMENTS : has
   COMMENTS ||--o{ COMMENT_ATTACHMENTS : has
+  PAYMENT_REQUESTS ||--o{ PAYMENT_TERMS_PROPOSALS : has
   DOCUMENT_TYPES ||--o{ DOCUMENTS : classifies
   DOCUMENT_TYPES ||--o{ REQUEST_DOC_REQUIREMENTS : classifies
 
@@ -49,6 +50,8 @@ erDiagram
     int currency_id FK
     int agent_id FK
     string payment_method
+    decimal agreed_commission_amount
+    decimal agreed_rate
   }
   PURCHASE_REQUESTS {
     int request_id PK
@@ -79,6 +82,18 @@ erDiagram
     string file_name
     string storage_path
     int uploaded_by_id FK
+  }
+  PAYMENT_TERMS_PROPOSALS {
+    int id PK
+    int payment_request_id FK
+    string proposed_payment_method
+    int proposed_agent_id FK
+    decimal commission_amount
+    decimal proposed_rate
+    int proposed_by_id FK
+    string decision
+    string decision_comment
+    int decided_by_id FK
   }
   DOCUMENT_TYPES {
     string code PK
@@ -170,7 +185,8 @@ erDiagram
 - Один и тот же `USERS.id` встречается и как заказчик, и как исполнитель, и как участник делегирования — роль не жёстко зашита в отдельные таблицы, а определяется полем `role` и тем, в какой роли пользователь упомянут в конкретной заявке (см. [[Роли и права]]).
 - **`REQUESTS.created_by` vs `REQUESTS.requester_id`** — разделены, чтобы поддержать создание заявки от имени Заказчика Руководителем/Исполнителем отдела: `created_by` — кто технически создал запись, `requester_id` — кто является Заказчиком по заявке (и чьи права на подтверждение/ответы на уточнения действуют). В обычном случае оба поля указывают на одного и того же пользователя (см. [[00. Создание заявки|Создание заявки]], [[Бизнес-правила|BR-014, BR-015]]).
 - **`COMMENT_ATTACHMENTS`** — вложения к комментариям, отдельная от `DOCUMENTS` таблица: не типизируются через `DOCUMENT_TYPES` и не участвуют в проверке комплектности при закрытии заявки (см. [[Бизнес-правила|BR-054]]).
+- **`PAYMENT_TERMS_PROPOSALS`** — история предложений условий исполнения платежа (способ, комиссия, курс), 1:N к `PAYMENT_REQUESTS` — намеренно отдельная таблица, а не поля в самой заявке, чтобы не терять историю при повторном предложении после отклонения (см. [[00a. Согласование условий исполнения (Платёж)|Согласование условий исполнения (Платёж)]], [[Бизнес-правила|BR-100–BR-102]]). Последнее принятое предложение дублируется в `PAYMENT_REQUESTS.agreed_commission_amount` / `agreed_rate` для быстрого доступа.
 - `PAYMENT_REQUESTS` хранит `rate_at_request` / `rate_at_execution` (не показаны на диаграмме для краткости) — см. edge cases по курсу ЦБ в [[01. Поля заявки — Платёж|Поля заявки — Платёж]] и [[08. Фактическое исполнение платежа|Фактическое исполнение платежа]].
 
 ## Реализация
-Модель уже реализована как SQLAlchemy 2.0 модели (17 таблиц) и первая Alembic-миграция под стек FastAPI/PostgreSQL — см. `paytracker/README.md` в этой же папке (`06. Данные/paytracker/`). Комментарии в коде моделей ссылаются на конкретные заметки этого vault. Проверено на PostgreSQL 16: `alembic upgrade head` / `alembic downgrade base` / повторный upgrade, сквозная запись/чтение через ORM. Соотносится с [[Архитектурные решения]] и [[Нефункциональные требования]].
+Модель уже реализована как SQLAlchemy 2.0 модели (19 таблиц) и Alembic-миграции под стек FastAPI/PostgreSQL — см. `paytracker/README.md` в этой же папке (`06. Данные/paytracker/`). Комментарии в коде моделей ссылаются на конкретные заметки этого vault. Проверено на PostgreSQL 16: `alembic upgrade head` / `alembic downgrade base` / повторный upgrade, сквозная запись/чтение через ORM. Соотносится с [[Архитектурные решения]] и [[Нефункциональные требования]].

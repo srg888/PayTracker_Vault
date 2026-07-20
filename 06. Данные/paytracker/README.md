@@ -42,3 +42,15 @@
 - Новые значения `audit_action_type`: `created_for_requester`, `executor_self_assigned`,
   `comment_attachment_uploaded` (BR-023, BR-054). На PostgreSQL < 12 добавление значений
   ENUM нужно выполнить отдельными выражениями вне транзакции.
+
+### `c4d8f27a9b13` — согласование условий исполнения платежа, проверка Руководителем
+Добавляет:
+- `payment_terms_proposals` — история предложений условий исполнения платежа (способ,
+  комиссия, курс) и решений Заказчика (Бизнес-правила BR-100–BR-102).
+- `payment_requests.agreed_commission_amount`, `agreed_rate` — последнее принятое
+  предложение, для быстрого доступа. `payment_requests.payment_method` становится
+  nullable — заполняется при согласовании условий, а не при создании заявки.
+- Новые значения `request_status`: `terms_proposed`, `manager_review`.
+- Новые значения `audit_action_type`: `terms_proposed`, `terms_accepted`,
+  `terms_rejected`, `sent_for_manager_review`, `rework_requested`, `closed_by_manager`
+  (BR-100–BR-102, BR-110–BR-111).
