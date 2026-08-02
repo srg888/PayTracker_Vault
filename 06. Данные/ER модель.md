@@ -49,9 +49,11 @@ erDiagram
     decimal amount
     int currency_id FK
     int agent_id FK
+    int subagent_id FK
     string payment_method
     decimal agreed_commission_amount
     decimal agreed_rate
+    date agreed_execution_deadline
   }
   PURCHASE_REQUESTS {
     int request_id PK
@@ -88,8 +90,10 @@ erDiagram
     int payment_request_id FK
     string proposed_payment_method
     int proposed_agent_id FK
+    int proposed_subagent_id FK
     decimal commission_amount
     decimal proposed_rate
+    date proposed_execution_deadline
     int proposed_by_id FK
     string decision
     string decision_comment
@@ -99,6 +103,7 @@ erDiagram
     string code PK
     string name
     string category
+    int recipient_division_id FK
   }
   DOCUMENTS {
     int id PK
@@ -119,6 +124,7 @@ erDiagram
 ```mermaid
 erDiagram
   AGENTS ||--o{ PAYMENT_REQUESTS : agent
+  AGENTS ||--o{ PAYMENT_REQUESTS : subagent
   BUYER_COMPANIES ||--o{ PURCHASE_REQUESTS : buyer
   CURRENCIES ||--o{ PAYMENT_REQUESTS : currency
   CURRENCIES ||--o{ EXCHANGE_RATES : rate_for
@@ -126,10 +132,16 @@ erDiagram
   USERS ||--o{ DELEGATIONS : delegate
   USERS ||--o{ AUDIT_LOG : actor
   REQUESTS ||--o{ AUDIT_LOG : subject
+  INTERNAL_SERVICES ||--o{ DOCUMENT_TYPES : receives
 
   AGENTS {
     int id PK
     string code
+    string name
+    bool is_own_company
+  }
+  INTERNAL_SERVICES {
+    int id PK
     string name
   }
   BUYER_COMPANIES {
@@ -175,6 +187,10 @@ erDiagram
   REQUESTS {
     int id PK
   }
+  DOCUMENT_TYPES {
+    string code PK
+    int recipient_division_id FK
+  }
 ```
 
 ## Ключевые решения по модели
@@ -186,7 +202,11 @@ erDiagram
 - **`REQUESTS.created_by` vs `REQUESTS.requester_id`** — разделены, чтобы поддержать создание заявки от имени Заказчика Руководителем/Исполнителем отдела: `created_by` — кто технически создал запись, `requester_id` — кто является Заказчиком по заявке (и чьи права на подтверждение/ответы на уточнения действуют). В обычном случае оба поля указывают на одного и того же пользователя (см. [[00. Создание заявки|Создание заявки]], [[Бизнес-правила|BR-014, BR-015]]).
 - **`COMMENT_ATTACHMENTS`** — вложения к комментариям, отдельная от `DOCUMENTS` таблица: не типизируются через `DOCUMENT_TYPES` и не участвуют в проверке комплектности при закрытии заявки (см. [[Бизнес-правила|BR-054]]).
 - **`PAYMENT_TERMS_PROPOSALS`** — история предложений условий исполнения платежа (способ, комиссия, курс), 1:N к `PAYMENT_REQUESTS` — намеренно отдельная таблица, а не поля в самой заявке, чтобы не терять историю при повторном предложении после отклонения (см. [[00a. Согласование условий исполнения (Платёж)|Согласование условий исполнения (Платёж)]], [[Бизнес-правила|BR-100–BR-102]]). Последнее принятое предложение дублируется в `PAYMENT_REQUESTS.agreed_commission_amount` / `agreed_rate` для быстрого доступа.
+- **Маршрут исполнения (Агент/Субагент)** — `agent_id` и `subagent_id` в `PAYMENT_REQUESTS` / `PAYMENT_TERMS_PROPOSALS` — оба FK на одну и ту же таблицу `AGENTS` (не отдельные справочники): субагент — это просто запись `AGENTS`, использованная как второй уровень конкретного маршрута (см. [[Словарь предметной области#Маршрут исполнения платежа|Маршрут исполнения платежа]], [[Бизнес-правила|BR-120]]). Максимум два уровня — доменное ограничение (проверяется на уровне приложения, не через рекурсивный self-join).
+- **`INTERNAL_SERVICES`** — отдельная от `DIVISIONS` таблица. `DIVISIONS` — организационная принадлежность Заказчика (внешняя, указывается при создании заявки); `INTERNAL_SERVICES` — куда закрывающий документ направляется у нас внутри (см. [[Службы-получатели документов]], [[Бизнес-правила|BR-123]]). Путать их не стоит, несмотря на схожесть слов "подразделение"/"служба".
 - `PAYMENT_REQUESTS` хранит `rate_at_request` / `rate_at_execution` (не показаны на диаграмме для краткости) — см. edge cases по курсу ЦБ в [[01. Поля заявки — Платёж|Поля заявки — Платёж]] и [[08. Фактическое исполнение платежа|Фактическое исполнение платежа]].
 
 ## Реализация
 Модель уже реализована как SQLAlchemy 2.0 модели (19 таблиц) и Alembic-миграции под стек FastAPI/PostgreSQL — см. `paytracker/README.md` в этой же папке (`06. Данные/paytracker/`). Комментарии в коде моделей ссылаются на конкретные заметки этого vault. Проверено на PostgreSQL 16: `alembic upgrade head` / `alembic downgrade base` / повторный upgrade, сквозная запись/чтение через ORM. Соотносится с [[Архитектурные решения]] и [[Нефункциональные требования]].
+
+> **Не реализовано в коде.** Маршрут исполнения (Агент+Субагент), срок исполнения в условиях, признак "наша компания" у Агента, `INTERNAL_SERVICES` и колонка "Служба-получатель" — на момент этой правки описаны только здесь и в связанных заметках процессов/справочников. В коде моделей (`paytracker/app/models/`) и миграциях этих полей/таблиц пока нет — потребуется отдельная миграция при переходе к реализации.
